@@ -30,7 +30,11 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  for i in range(X.shape[0]):
+      temp = X[i].T.dot(W)
+      loss += - temp[y[i]] + np.log(np.sum(np.exp(temp)))    
+  loss /= X.shape[0]
+  loss += reg*np.sum(W * W)
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
