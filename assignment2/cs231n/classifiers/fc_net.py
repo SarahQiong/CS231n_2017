@@ -258,15 +258,14 @@ class FullyConnectedNet(object):
         # layer, etc.                                                              #
         ############################################################################
         reg=self.reg
-        cache=[None]
-        W=[None]*self.num_layers
-        for i in range(self.num_layers-1):
-            W[i],b=self.params['W'+str(i+1)],self.params['b'+str(i+1)]
-            if i==0:
-                out,cache[0]=affine_forward(X,W[0],b)
-            else:
-                out,cachetmp=affine_forward(out,W[i],b)
-                cache.append(cachetmp)
+        cache = [None]*self.num_layers
+        W = [None]*self.num_layers
+        b = np.zeros(self.num_layers)
+        W[i],b[i]=self.params['W'+str(i+1)],self.params['b'+str(i+1)] 
+        out,cache[0]=affine_forward(X,W[0],b)            
+        for i in range(1, len(hiddhen_dims)):
+            out,cachetmp=affine_forward(out,W[i],b)
+            cache.append(cachetmp)
             if self.use_batchnorm:
                 beta=self.params['beta'+str(i+1)]
                 gamma=self.params['gamma'+str(i+1)]
@@ -312,7 +311,8 @@ class FullyConnectedNet(object):
         # automated tests, make sure that your L2 regularization includes a factor #
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
-        pass
+        loss, dscores = softmax_loss(scores, y)        
+        loss += 0.5*reg*(np.sum(W1*W1)+np.sum(W2*W2))       
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
