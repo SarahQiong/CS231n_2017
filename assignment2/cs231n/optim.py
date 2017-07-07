@@ -66,6 +66,8 @@ def sgd_momentum(w, dw, config=None):
     # the next_w variable. You should also use and update the velocity v.     #
     ###########################################################################
     pass
+    v = config['momentum'] * v - config['learning_rate'] * dw # integrate velocity
+    next_w = w + v 
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -99,10 +101,12 @@ def rmsprop(x, dx, config=None):
     # in the next_x variable. Don't forget to update cache value stored in    #
     # config['cache'].                                                        #
     ###########################################################################
-    pass
+    cache = config['decay_rate'] * config['cache'] + (1 - config['decay_rate']) * dx**2
+    next_x = x- config['learning_rate'] * dx / (np.sqrt(cache) + config['epsilon'])
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
+    config['cache'] = cache
 
     return next_x, config
 
@@ -136,9 +140,15 @@ def adam(x, dx, config=None):
     # the next_x variable. Don't forget to update the m, v, and t variables   #
     # stored in config.                                                       #
     ###########################################################################
-    pass
+    m = config['beta1']*config['m'] + (1-config['beta1'])*dx
+    mt = m / (1-config['beta1']**config['t'])
+    v = config['beta2']*config['v'] + (1-config['beta2'])*(dx**2)
+    vt = v / (1-config['beta2']**config['t'])
+    next_x = x- config['learning_rate'] * mt / (np.sqrt(vt) + config['epsilon'])
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
+    config['m'] = m
+    config['v'] = v
 
     return next_x, config
