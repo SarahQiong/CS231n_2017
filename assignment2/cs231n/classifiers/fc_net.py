@@ -198,8 +198,8 @@ class FullyConnectedNet(object):
         self.params['b'+str(self.num_layers)] = np.zeros(num_classes)    
         if self.use_batchnorm:
             for i in range(len(hidden_dims)):
-                self.params['gamma'+str(i+1)] = np.ones(1)
-                self.params['beta'+str(i+1)] = np.zeros(1)
+                self.params['gamma'+str(i+1)] = np.ones(hidden_dims[i])
+                self.params['beta'+str(i+1)] = np.zeros(hidden_dims[i])
                 
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -263,6 +263,8 @@ class FullyConnectedNet(object):
         relu_cache = []
         W = [None]*self.num_layers
         b = [None]*self.num_layers
+        beta = [None]*(self.num_layers-1)
+        gamma = [None]*(self.num_layers-1)
                 
         if self.use_batchnorm:
             batchnorm_cache = []
@@ -272,14 +274,14 @@ class FullyConnectedNet(object):
         for i in range(self.num_layers-1):
             W[i], b[i] = self.params['W'+str(i+1)], self.params['b'+str(i+1)] 
             if i==0:
-                out, affine_cache_tmp = affine_forward(X, W[i], b[i])
+                out, affine_cache_tmp = affine_forward(X, W[0], b[0])
             else: 
                 out, affine_cache_tmp = affine_forward(out, W[i], b[i])
             affine_cache.append(affine_cache_tmp)
             if self.use_batchnorm:
-                beta = self.params['beta'+str(i+1)]
-                gamma = self.params['gamma'+str(i+1)]
-                out, batchnorm_cache_tmp = batchnorm_forward(out, gamma, beta, self.bn_params[i])
+                beta[i] = self.params['beta'+str(i+1)]
+                gamma[i] = self.params['gamma'+str(i+1)]
+                out, batchnorm_cache_tmp = batchnorm_forward(out, gamma[i], beta[i], self.bn_params[i])
                 batchnorm_cache.append(batchnorm_cache_tmp)
             out, relu_cache_tmp = relu_forward(out)
             relu_cache.append(relu_cache_tmp)
@@ -326,6 +328,8 @@ class FullyConnectedNet(object):
             dout = relu_backward(dout,relu_cache[i])
             if self.use_batchnorm:
                 dout, dgamma, dbeta = batchnorm_backward(dout, batchnorm_cache[i])
+                grads['gamma'+str(i+1)]=dgamma
+                grads['beta'+str(i+1)]=dbeta
             dout, dW[i], db[i]= affine_backward(dout, affine_cache[i])
             
         for i in range(self.num_layers): 
