@@ -142,16 +142,22 @@ class CaptioningRNN(object):
         #captions of shape (N,T), W_embed of shape (V=len(word_to_idx),W)        
         if self.cell_type == 'rnn':
             h, cache_forward = rnn_forward(word2vec, h0, Wx, Wh, b)
-            taf, cache_taf = temporal_affine_forward(h, W_vocab, b_vocab)
-            loss, dloss = temporal_softmax_loss(taf, captions_out, mask) 
+        if self.cell_type == 'lstm':
+            h, cache_forward = lstm_forward(word2vec, h0, Wx, Wh, b)
+            
+        taf, cache_taf = temporal_affine_forward(h, W_vocab, b_vocab)
+        loss, dloss = temporal_softmax_loss(taf, captions_out, mask) 
             #dloss of shape (N, T, V)
-            dtaf, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dloss, cache_taf)
+        dtaf, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dloss, cache_taf)
+        if self.cell_type == 'rnn':
             dx, dh0, dWx, dWh, db = rnn_backward(dtaf, cache_forward)
-            grads['Wx'], grads['Wh'], grads['b'] = dWx, dWh, db
-            dWembed = word_embedding_backward(dx, cache)
-            grads['W_embed'] = dWembed
-            grads['W_proj'] = features.T.dot(dh0)
-            grads['b_proj'] = np.sum(dh0, axis=0)
+        if self.cell_type == 'lstm':
+            dx, dh0, dWx, dWh, db = lstm_backward(dtaf, cache_forward)
+        grads['Wx'], grads['Wh'], grads['b'] = dWx, dWh, db
+        dWembed = word_embedding_backward(dx, cache)
+        grads['W_embed'] = dWembed
+        grads['W_proj'] = features.T.dot(dh0)
+        grads['b_proj'] = np.sum(dh0, axis=0)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -215,15 +221,19 @@ class CaptioningRNN(object):
         ###########################################################################
         h = [None]*(max_length+1)
         h[0] = features.dot(W_proj) + b_proj
-        
+        H = b_proj.shape[0]
+        prev_c = np.zeros((N,H))
         x = self._null * np.ones((N, max_length+1), dtype=np.int32)
         x[:,0] = self._start
         for length in range(max_length):
             word2vec,_ = word_embedding_forward(x[:,length], W_embed)
             if self.cell_type == 'rnn':
                 h[length+1],_ = rnn_step_forward(word2vec, h[length], Wx, Wh, b)
-                scores,_ = temporal_affine_forward(h[length+1].reshape((N,1,-1)), W_vocab, b_vocab)
-                x[:,length+1] = np.argmax(scores.reshape((N,-1)), axis=1)
+            if self.cell_type == 'lstm':
+                h[length+1], next_c, _ = lstm_step_forward(word2vec, h[length], prev_c, Wx, Wh, b)
+                prev_c = next_c
+            scores,_ = temporal_affine_forward(h[length+1].reshape((N,1,-1)), W_vocab, b_vocab)
+            x[:,length+1] = np.argmax(scores.reshape((N,-1)), axis=1)
         captions = x[:,range(max_length)]
         ############################################################################
         #                             END OF YOUR CODE                             #
