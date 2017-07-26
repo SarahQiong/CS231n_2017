@@ -22,3 +22,13 @@ The goal of assignment2 is to understand Neural Network and be able to implement
 - Q3: [Dropout](https://github.com/SarahQiong/CS231n_2017/blob/master/assignment2/Dropout.ipynb)
 - Q4: [Convolutional Networks](https://github.com/SarahQiong/CS231n_2017/blob/master/assignment2/ConvolutionalNetworks.ipynb)
 - Q5: [TensorFlow on CIFAR-10](https://github.com/SarahQiong/CS231n_2017/blob/master/assignment2/TensorFlow.ipynb)
+
+
+2. [Assignment3](http://cs231n.github.io/assignments2017/assignment3/)
+The goal of assignment3 is to understand the architecture of recurrent neural networks (RNNs), understand and implement both Vanilla RNNs and Long-Short Term Memory (LSTM) RNNs, how to sample from an RNN language model at test-time, how to combine convolutional neural nets and recurrent nets to implement an image captioning system, how a trained convolutional network can be used to compute gradients with respect to the input image, implement and different applications of image gradients, including saliency maps, fooling images, class visualizations, understand and implement style transfer, understand how to train and implement a generative adversarial network (GAN) to produce images that look like a dataset.
+
+- Q1: [Image Captioning with Vanilla RNNs](https://github.com/SarahQiong/CS231n_2017/blob/master/assignment3/RNN_Captioning.ipynb) 
+- Q2: [Image Captioning with LSTMs](https://github.com/SarahQiong/CS231n_2017/blob/master/assignment3/LSTM_Captioning.ipynb) 
+- Q3: [Network Visualization: Saliency maps, Class Visualization, and Fooling Images](https://github.com/SarahQiong/CS231n_2017/blob/master/assignment3/NetworkVisualization-TensorFlow.ipynb) 
+- Q4: [Style Transfer](https://github.com/SarahQiong/CS231n_2017/blob/master/assignment3/StyleTransfer-TensorFlow.ipynb)
+- Q5: [Generative Adversarial Networks](https://github.com/SarahQiong/CS231n_2017/blob/master/assignment3/GANs-TensorFlow.ipynb)
