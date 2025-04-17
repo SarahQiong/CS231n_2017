@@ -76,9 +76,9 @@ class TwoLayerNet(object):
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    hout = X.dot(W1)+b1
-    actiout = np.maximum(0,hout)
-    scores = actiout.dot(W2)+b2
+    u1 = X @ W1  + b1
+    z1 = u1 * (u1 > 0)
+    scores = z1 @ W2 + b2
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -95,10 +95,10 @@ class TwoLayerNet(object):
     # in the variable loss, which should be a scalar. Use the Softmax           #
     # classifier loss.                                                          #
     #############################################################################
-    data_loss = np.sum(np.log(np.sum(np.exp(scores),axis=1)),axis=0)-np.sum(scores[range(N),y])
-    data_loss /= N
-    reg_loss = reg*(np.sum(W1 * W1) + np.sum(b1 * b1) + np.sum(W2 * W2) + np.sum(b2 * b2))
-    loss = data_loss + reg_loss
+    z2 = np.exp(scores - np.max(scores, axis = 1).reshape(-1,1))
+    z2 = z2 / z2.sum(axis=1).reshape(-1, 1)
+    risk = - (np.log(z2[np.arange(N), y] + 1e-20)).mean()
+    loss = risk.mean() + reg * np.linalg.norm(W1)**2 + reg * np.linalg.norm(W2)**2
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -111,37 +111,16 @@ class TwoLayerNet(object):
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
     
-    #hout = X.dot(W1)+b1  size N,H
-    #actiout = np.maximum(0,hout)  N,H
-    #scores =actiout.dot(W2)+b2  N,C
-    #data_loss = (np.sum(np.log(np.sum(np.exp(scores),axis=1)),axis=0)-np.sum(scores[range(N),y]))/N
-    #reg_loss = reg*(np.sum(W1 * W1) + np.sum(b1 * b1) + np.sum(W2 * W2) + np.sum(b2 * b2))
-    #loss = data_loss + reg_loss
+    grad_scores = z2.copy()
+    grad_scores[np.arange(N), y] -= 1
+    grad_scores /= N
     
-    ddata_loss = 1
-    dreg_loss = 1
-    dW1 = 2*reg*W1*dreg_loss
-    dW2 = 2*reg*W2*dreg_loss
-    db1 = 2*reg*b1*dreg_loss
-    db2 = 2*reg*b2*dreg_loss
+    grads["W2"] = z1.T @ grad_scores + 2* reg * W2
+    grads["b2"] = grad_scores.sum(axis = 0)
     
-    temp = np.exp(scores)/np.sum(np.exp(scores),axis=1)[:,None]
-    temp[range(N),y] -= 1
-    temp /= N
-    dscores = temp * ddata_loss
-    db2 += np.ones(N).dot(dscores)    
-    dW2 += actiout.T.dot(dscores)
-    dactiout = dscores.dot(W2.T)
-    dhout = (hout>0)*dactiout
-    dW1 += X.T.dot(dhout)
-    db1 += np.ones(N).dot(dhout)  
-   
-    
-       
-    grads['W1'] = dW1
-    grads['b1'] = db1
-    grads['W2'] = dW2
-    grads['b2'] = db2
+    grad_u1 = (grad_scores @ W2.T ) * (z1 > 0)
+    grads["W1"] = X.T @ grad_u1 + 2* reg * W1
+    grads["b1"] = grad_u1.sum(axis = 0)
     
     
     #############################################################################
@@ -205,10 +184,10 @@ class TwoLayerNet(object):
       # stored in the grads dictionary defined above.                         #
       #########################################################################
       # gradient descent step, need to be rewrite since W1,W2,b1,b2 need to be updated separatelt
-      self.params['W1'] -= learning_rate*grads['W1']
-      self.params['b1'] -= learning_rate*grads['b1']
-      self.params['W2'] -= learning_rate*grads['W2']
-      self.params['b2'] -= learning_rate*grads['b2']
+      self.params['W1'] -= learning_rate * grads['W1']
+      self.params['b1'] -= learning_rate * grads['b1']
+      self.params['W2'] -= learning_rate * grads['W2']
+      self.params['b2'] -= learning_rate * grads['b2']
       
 
       #########################################################################
